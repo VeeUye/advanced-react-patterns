@@ -8,25 +8,47 @@ function useToggle() {
   const [on, setOn] = React.useState(false)
   const toggle = () => setOn(!on)
 
-  const togglerProps = {
-    'aria-pressed': on,
-    onClick: toggle,
+  // The `callAll` function takes any number of function arguments and returns a new function.
+  // When this new function is called, it invokes all the provided functions with the same arguments.
+  // It is used in this context to combine the `onClick` and `toggle` functions into a single function,
+  //  so that when the `onClick` event is triggered, both the `onClick` and `toggle` functions are called.
+
+  const callAll = (...fns) => {
+    return (...args) => {
+      fns.forEach(fn => {
+        fn && fn(...args)
+      })
+    }
+  }
+
+  const getTogglerProps = ({onClick, ...props} = {}) => {
+    return {
+      'aria-pressed': on,
+      onClick: callAll(onClick, toggle),
+      ...props,
+    }
   }
 
   return {
     on,
     toggle,
-    togglerProps,
+    getTogglerProps,
   }
 }
 
 function App() {
-  const {on, togglerProps} = useToggle()
+  const {on, getTogglerProps} = useToggle()
   return (
     <div>
-      <Switch on={on} {...togglerProps} />
+      <Switch {...getTogglerProps({on})} />
       <hr />
-      <button aria-label="custom-button" {...togglerProps}>
+      <button
+        {...getTogglerProps({
+          'aria-label': 'custom-button',
+          onClick: () => console.info('onButtonClick'),
+          id: 'custom-button-id',
+        })}
+      >
         {on ? 'on' : 'off'}
       </button>
     </div>
