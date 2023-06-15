@@ -4,6 +4,8 @@
 import * as React from 'react'
 import {Switch} from '../switch'
 import {act} from '@testing-library/react'
+import warning from 'warning'
+import {useEffect} from 'react'
 
 const callAll =
   (...fns) =>
@@ -34,6 +36,8 @@ function useToggle({
   reducer = toggleReducer,
   onChange,
   on: controlledOn,
+  readOnly = false,
+
   // 🐨 add an `onChange` prop.
   // 🐨 add an `on` option here
   // 💰 you can alias it to `controlledOn` to avoid "variable shadowing."
@@ -44,6 +48,15 @@ function useToggle({
   // 💰 `controlledOn != null`
   const onIsControlled = controlledOn != null
   const on = onIsControlled ? controlledOn : state.on
+
+  const hasOnChange = Boolean(onChange)
+
+  useEffect(() => {
+    warning(
+      !(!hasOnChange && onIsControlled && !readOnly),
+      'An `on` prop was provided to useToggle without an `onChange` handler. This will render a read-only toggle. If you want it to be mutable, use `initialOn`. Otherwise, set either `onChnage` or `readOnly`',
+    )
+  }, [hasOnChange, onIsControlled, readOnly])
 
   // 🐨 Replace the next line with `const on = ...` which should be `controlledOn` if
   // `onIsControlled`, otherwise, it should be `state.on`.
@@ -108,12 +121,11 @@ function useToggle({
   }
 }
 
-function Toggle({on: controlledOn, onChange, initialOn, reducer}) {
+function Toggle({on: controlledOn, onChange, readOnly}) {
   const {on, getTogglerProps} = useToggle({
     on: controlledOn,
     onChange,
-    initialOn,
-    reducer,
+    readOnly,
   })
   const props = getTogglerProps({on})
   return <Switch {...props} />

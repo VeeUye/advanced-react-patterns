@@ -5,6 +5,7 @@ import App, {Toggle} from '../exercise/06'
 
 test('toggling either toggle toggles both', async () => {
   renderToggle(<App />)
+
   const buttons = screen.getAllByTestId('toggle-input')
   const [toggleButton1, toggleButton2] = buttons
   await userEvent.click(toggleButton1)
