@@ -3,7 +3,6 @@
 
 import * as React from 'react'
 import {Switch} from '../switch'
-import {act} from '@testing-library/react'
 import warning from 'warning'
 import {useEffect, useRef} from 'react'
 
@@ -31,6 +30,26 @@ function toggleReducer(state, {type, initialState}) {
   }
 }
 
+const useControlledSwitchWarning = (
+  controlPropValue,
+  controlPropName,
+  componentName,
+) => {
+  const isControlled = controlPropValue != null
+  const {current: wasControlled} = useRef(isControlled)
+
+  useEffect(() => {
+    warning(
+      !(isControlled && !wasControlled),
+      `\`${componentName}\` is changing from uncontrolled to controlled. Components should not switch from uncontrolled to controlled (or vice versa). Decide between using a controlled or uncontrolled \`${componentName}\` for the lifetime of the component. Check to \`${controlPropName}\` prop`,
+    )
+    warning(
+      !(!isControlled && wasControlled),
+      `\`${componentName}\` is changing from controlled to uncontrolled. Components should not switch from uncontrolled to controlled (or vice versa). Decide between using a controlled or uncontrolled \`${componentName}\`for the lifetime of the component. Check to \`${controlPropName}\`prop`,
+    )
+  }, [componentName, controlPropName, isControlled, wasControlled])
+}
+
 function useToggle({
   initialOn = false,
   reducer = toggleReducer,
@@ -44,18 +63,7 @@ function useToggle({
   const onIsControlled = controlledOn != null
   const on = onIsControlled ? controlledOn : state.on
 
-  const {current: onWasControlled} = useRef(onIsControlled)
-
-  useEffect(() => {
-    warning(
-      !(onIsControlled && !onWasControlled),
-      '`useToggle` is changing from uncontrolled to controlled. Components should not switch from uncontrolled to controlled (or vice versa). Decide between using a controlled or uncontrolled `useToggle` for the lifetime of the component. Check to `on` prop',
-    )
-    warning(
-      !(!onIsControlled && onWasControlled),
-      '`useToggle` is changing from controlled to uncontrolled. Components should not switch from uncontrolled to controlled (or vice versa). Decide between using a controlled or uncontrolled `useToggle` for the lifetime of the component. Check to `on` prop',
-    )
-  }, [onIsControlled, onWasControlled])
+  useControlledSwitchWarning(controlledOn, 'on', 'useToggle')
 
   const hasOnChange = Boolean(onChange)
 
@@ -124,7 +132,7 @@ function App() {
   }
 
   function handleResetClick() {
-    setBothOn(false)
+    setBothOn()
     setTimesClicked(0)
   }
 
