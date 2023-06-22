@@ -50,6 +50,35 @@ const useControlledSwitchWarning = (
   }, [componentName, controlPropName, isControlled, wasControlled])
 }
 
+function useOnChangeReadOnlyWarning(
+  controlPropValue,
+  controlPropName,
+  componentName,
+  hasOnChange,
+  readOnly,
+  readOnlyProp,
+  initialValueProp,
+  onChangeProp,
+) {
+  const isControlled = controlPropValue != null
+
+  useEffect(() => {
+    warning(
+      !(!hasOnChange && isControlled && !readOnly),
+      `A \`${controlPropName}\` prop was provided to \`${componentName}\` without an \`${onChangeProp}\` handler. This will result in a read-only \`${controlPropName}\` value. If you want it to be mutable, use \`${initialValueProp}\`. Otherwise, set either \`${onChangeProp}\` or \`${readOnlyProp}\`.`,
+    )
+  }, [
+    controlPropValue,
+    componentName,
+    controlPropName,
+    hasOnChange,
+    onChangeProp,
+    initialValueProp,
+    readOnly,
+    readOnlyProp,
+  ])
+}
+
 function useToggle({
   initialOn = false,
   reducer = toggleReducer,
@@ -64,15 +93,17 @@ function useToggle({
   const on = onIsControlled ? controlledOn : state.on
 
   useControlledSwitchWarning(controlledOn, 'on', 'useToggle')
-
-  const hasOnChange = Boolean(onChange)
-
-  useEffect(() => {
-    warning(
-      !(!hasOnChange && onIsControlled && !readOnly),
-      'An `on` prop was provided to useToggle without an `onChange` handler. This will render a read-only toggle. If you want it to be mutable, use `initialOn`. Otherwise, set either `onChnage` or `readOnly`',
-    )
-  }, [hasOnChange, onIsControlled, readOnly])
+  useOnChangeReadOnlyWarning(
+    controlledOn,
+    'on',
+    'useToggle',
+    Boolean(onChange),
+    readOnly,
+    'readOnly',
+    'initialOn',
+    'onChange',
+    '',
+  )
 
   const dispatchWithOnChange = action => {
     if (!onIsControlled) {
@@ -132,7 +163,7 @@ function App() {
   }
 
   function handleResetClick() {
-    setBothOn()
+    setBothOn(false)
     setTimesClicked(0)
   }
 
